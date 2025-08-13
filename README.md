@@ -6,4 +6,4 @@ To run the app from the command line:
 - From target folder:
   java -jar testapp-1.0-SNAPSHOT.jar
 
-<img src="demo.gif" width="300"/>
+<img src="demo.gif" width="600"/>

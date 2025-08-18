@@ -47,13 +47,13 @@ public class TestApp {
 
     private JPanel buttonsPanel;
     private int numberForSortScreen;
-    private boolean sortScreenInitialized = false;
 
-    private List<Integer> numbers;
+    private final List<Integer> numbers = new ArrayList<>();
     private final List<JButton> allButtons = new ArrayList<>();
 
-    private volatile boolean sorting = false;
-    private boolean ascendingOrder = true;
+    private volatile boolean isSorting = false;
+    private boolean isSortScreenInitialized = false;
+    private boolean isAscendingOrder = true;
 
     private JButton startButton;
 
@@ -98,7 +98,7 @@ public class TestApp {
             try {
                 numberForSortScreen = Integer.parseInt(text.trim());
                 if (numberForSortScreen > 0) {
-                    sortScreenInitialized = false;
+                    isSortScreenInitialized = false;
                     showSortScreen();
                 } else {
                     JOptionPane.showMessageDialog(frame, INCORRECT_NUMBER_MSG);
@@ -136,8 +136,8 @@ public class TestApp {
         startButton.addActionListener(e -> startSorting());
         JButton resetButton = new JButton("Back");
         resetButton.addActionListener(e -> {
-            sorting = false;
-            ascendingOrder = true;
+            isSorting = false;
+            isAscendingOrder = true;
             cardLayout.show(cardPanel, "Intro");
         });
 
@@ -153,16 +153,17 @@ public class TestApp {
 
     private void showSortScreen() {
         cardLayout.show(cardPanel, "Sort");
-        if (!sortScreenInitialized) {
+        if (!isSortScreenInitialized) {
             generateButtons(numberForSortScreen);
         }
     }
 
     private void generateButtons(int buttonCount) {
         clearButtons();
-        numbers = initRandomNumbers(buttonCount);
+        numbers.clear();
+        numbers.addAll(initRandomNumbers(buttonCount));
         createButtons(buttonCount);
-        sortScreenInitialized = true;
+        isSortScreenInitialized = true;
     }
 
     private static List<Integer> initRandomNumbers(int totalButtons) {
@@ -225,10 +226,13 @@ public class TestApp {
         button.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         button.addActionListener(e -> {
+            if (isSorting) {
+                return;
+            }
             int count = Integer.parseInt(button.getText());
             if (count <= MORE_BUTTONS_VALUE) {
                 generateButtons(count);
-                ascendingOrder = true;
+                isAscendingOrder = true;
             } else {
                 JOptionPane.showMessageDialog(frame, MORE_BUTTONS_MSG);
             }
@@ -253,17 +257,17 @@ public class TestApp {
     }
 
     private void startSorting() {
-        if (sorting) {
+        if (isSorting) {
             return;
         }
 
-        sorting = true;
+        isSorting = true;
         startButton.setEnabled(false);
         startButton.setBackground(Color.GRAY);
 
         new Thread(() -> {
             Consumer<List<Integer>> stepCallback = step -> {
-                if (!sorting) {
+                if (!isSorting) {
                     return;
                 }
                 try {
@@ -274,18 +278,18 @@ public class TestApp {
                 }
             };
 
-            BooleanSupplier running = () -> sorting;
+            BooleanSupplier running = () -> isSorting;
 
-            if (ascendingOrder) {
+            if (isAscendingOrder) {
                 IterativeQuickSort.quickSort(numbers, stepCallback, running, (a, b) -> Integer.compare(a, b));
             } else {
                 IterativeQuickSort.quickSort(numbers, stepCallback, running, (a, b) -> Integer.compare(b, a));
             }
 
-            ascendingOrder = !ascendingOrder;
+            isAscendingOrder = !isAscendingOrder;
 
             SwingUtilities.invokeLater(() -> {
-                sorting = false;
+                isSorting = false;
                 startButton.setEnabled(true);
                 startButton.setBackground(UIManager.getColor("Button.background"));
             });
